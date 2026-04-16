@@ -1,93 +1,58 @@
 ---
 name: "yunxin-im"
-description: "IM Skill across IMUIKit (UI) + IMSDK (SDK) with multi-platform routing and signature verification. Invoke when user asks IM features/integration/API signatures."
+description: "IM router skill. Decide UI (IMUIKit) vs SDK (IMSDK/API) and delegate to sub skills."
 ---
 
-# YunXin IM Skill (UI + SDK)
+# YunXin IM Skill（Router）
 
-本 Skill 覆盖 IM 的两部分：
+本文件只做“路由与职责分配”，不承载细节规则。
 
-- UI 组件（IMUIKit）：会话列表/聊天/通讯录等页面级能力
-- 底层 SDK（IMSDK + API）：会话/消息/历史消息/未读/好友/黑名单等能力与签名查询
+## 必须触发（关键词）
 
-## 选择路径（先判层）
+中文：
+
+- IM、云信、YunXin、NIM、IMSDK、NIM SDK、IMUIKit、UIKit、V2NIM
+- 会话、消息、历史消息、未读、已读、多端同步、好友、黑名单、用户资料、在线状态
+- 会话列表、聊天页面、通讯录、组件、页面、路由、权限、混淆、集成、初始化、登录
+
+English:
+
+- IM, YunXin, NIM, IMSDK, NIM SDK, IMUIKit, UIKit, V2NIM
+- conversation, message, history message, unread, read receipt, multi-device sync, friend, block list, user profile, online status
+- conversation list, chat UI, contacts UI, components, pages, routing, permission, proguard, integration, initialization, login
+
+## 拆分原则
+
+- IMUIKit Skill：面向 UI 组件集成；必须包含必要的 SDK 下钻与签名查询能力
+- IMSDK Skill：面向底层接口与能力实现；只需要文档与签名查询，不涉及 UI 组件
+
+## 路由规则（先判层）
 
 ### A) UI 组件（IMUIKit）
 
-适用：用户问“怎么集成 UI/页面/组件/路由/会话列表 UI/聊天 UI/通讯录 UI”。
+适用：用户问“页面/组件/路由/会话列表 UI/聊天 UI/通讯录 UI/如何集成 UIKit/仅集成聊天”等。
 
-英文示例问句：
+进入子 Skill：
 
-- "How to integrate IMUIKit on Android/iOS?"
-- "How to add conversation list UI and chat UI?"
-- "How to integrate contacts UI in IMUIKit?"
-- "How to setup IMUIKit routing for chat page?"
+- [IMUIKit Skill](uikit/SKILL.md)
 
-调用工具：
+### B) 底层 SDK（IMSDK + API）
 
-- `imuikit_doc`
+适用：用户问“接口/能力如何实现/历史消息/未读/收发消息/会话管理/好友/黑名单/用户资料/在线状态/接口签名”等。
 
-参数：
+进入子 Skill：
 
-- `platform`：必填
-- `topic`：建议必填（integration/initialization/login_logout/...）
+- [IMSDK Skill](sdk/SKILL.md)
 
-常用 topic：
+## 歧义词分流优先级（强制）
 
-- `integration` / `initialization` / `login_logout`
-- `conversation` / `chat` / `contact`
-- `kit_config` / `faq`
+1) 任何出现“方法签名/参数/返回值/API/接口/错误码/具体调用/示例代码/what is the signature”等意图：优先走 IMSDK Skill（并触发签名查询链路）。
+2) 出现“页面/组件/路由/会话列表 UI/聊天 UI/通讯录/IMUIKit/仅集成聊天/导入组件/权限/混淆/集成步骤”等意图：优先走 IMUIKit Skill。
+3) 仅出现“初始化/登录/会话/未读/历史消息”等泛能力词且未出现 UI 词：默认走 IMSDK Skill。
 
-### B) 底层 SDK（IMSDK）
+## 示例问句（Router 命中）
 
-适用：用户问“接口/能力如何实现/历史消息/未读/收发消息/会话管理”等。
-
-英文示例问句：
-
-- "How to initialize IMSDK and login?"
-- "How to implement local conversation management?"
-- "How to query and clear history messages?"
-- "How to send/receive text, image, and custom messages?"
-- "How to manage friend relationship and block list?"
-
-调用工具：
-
-- `imsdk_doc`
-
-参数：
-
-- `framework`：必填（android/ios/web/flutter/node/pc/harmony）
-- `topic`：必填（initialization/login_logout/...）
-
-常用 topic：
-
-- `initialization` / `login_logout`
-- `local_conversation` / `cloud_conversation`
-- `history_message` / `send_receive_message`
-- `friend_relationship` / `block_list`
-- `user_profile` / `user_status_subscription`
-
-## 签名查询（必须）
-
-当需要写代码或用户问“方法签名/参数/返回值”时，必须按顺序调用：
-
-1) `nim_sdk_search_symbols`（先找到类/成员）
-2) `nim_sdk_list_members`（列出类的 methods/fields，拿到准确签名）
-
-参数：
-
-- `framework`：android/flutter/web/ios（与本地 API 数据集一致；注意这里是 framework，不是 IMUIKit 的 platform）
-- `with_docs`：默认 false
-
-英文示例问句（必须触发签名查询链路）：
-
-- "What is the signature of V2NIMLoginService.login on Web?"
-- "Show me the initialize method signature in Flutter NimCore."
-- "What are methods in iOS V2NIMMessageService?"
-- "Find sendMessage API signature on Android."
-
-## 输出规范
-
-- 结论：列出应使用的接口/步骤
-- 引用：指出所用的 doc topic 或所查询的类/成员
-- 示例：给最小可运行的代码片段
+- Android 会话列表页面怎么接？
+- Web 查询历史消息和未读怎么做？
+- iOS 登录接口参数是什么？
+- What is the signature of V2NIMLoginService.login on Web?

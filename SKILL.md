@@ -70,4 +70,7 @@ description: "ROOT Skill for YunXin IM + IMUIKit. Invoke when user asks IM integ
 
 使用子 Skill：
 
-- [IM Skill](im/SKILL.md)
+- 默认路径：优先进入 IM Router Skill，由 Router 判定 UI（IMUIKit）或 SDK（IMSDK/API）并下发子 Skill。
+- [IM Router Skill](im/SKILL.md)
+- [IMUIKit Skill](im/uikit/SKILL.md)
+- [IMSDK Skill](im/sdk/SKILL.md)
