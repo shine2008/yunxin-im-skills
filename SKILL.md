@@ -7,6 +7,11 @@ description: "ROOT Skill for YunXin IM + IMUIKit. Invoke when user asks IM integ
 
 本仓库是云信 Skills（类似“产品级工作流约束”），配合 YunXin MCP Server 使用。
 
+本仓库同时支持两种运行形态：
+
+- Skill-only：仅依赖本仓库（使用 `im/**/reference/**` 的文档镜像完成大多数能力），不要求 MCP 可用
+- Skill + MCP：当检测到 MCP 可用时，仅在“接口签名/参数/返回值精确查询”场景调用 MCP 的 `nim_sdk_*`
+
 ## 必须触发（关键词）
 
 当用户提到任意关键词时，应优先加载本 ROOT Skill 做路由与工作流约束：
@@ -61,10 +66,11 @@ description: "ROOT Skill for YunXin IM + IMUIKit. Invoke when user asks IM integ
 
 ## 统一执行规则（强制）
 
-1) 先文档：集成/流程/参数含义必须先调用文档工具获取官方说明  
-2) 再签名：涉及具体方法调用时，必须用 `nim_sdk_*` 确认签名（禁止凭经验编造）  
-3) 再代码：代码示例必须基于“文档 + 签名查询结果”输出  
-4) 最小化：先给最小可用方案，扩展功能必须由用户明确要求
+1) 文档优先：默认使用本仓库 `im/**/reference/**` 文档镜像作为依据输出  
+2) 按需校验：若 MCP 可用，可用 `imuikit_doc/imsdk_doc` 复核文档或补充细节  
+3) 签名精确：仅当用户需要“方法签名/参数/返回值精确查询”时调用 `nim_sdk_*`  
+4) 无 MCP 兜底：若 MCP 不可用且用户仍追问接口细节，返回能命中的 SDK Service 相关文档集合，并提示需后续接入 MCP 复核签名  
+5) 最小化：先给最小可用方案，扩展功能必须由用户明确要求
 
 ## 进入 IM 域
 
@@ -74,3 +80,11 @@ description: "ROOT Skill for YunXin IM + IMUIKit. Invoke when user asks IM integ
 - [IM Router Skill](im/SKILL.md)
 - [IMUIKit Skill](im/uikit/SKILL.md)
 - [IMSDK Skill](im/sdk/SKILL.md)
+
+## 文档镜像
+
+- IMUIKit 文档镜像：`im/uikit/reference/<platform>/<topic>.md`
+- IMUIKit 索引：`im/uikit/reference/index.md`
+- IMSDK 文档镜像：`im/sdk/reference/<framework>/<topic>.md`
+- IMSDK 索引：`im/sdk/reference/index.md`
+- 覆盖清单：`im/reference/coverage.md`

@@ -7,6 +7,12 @@ description: "IM router skill. Decide UI (IMUIKit) vs SDK (IMSDK/API) and delega
 
 本文件只做“路由与职责分配”，不承载细节规则。
 
+默认策略：
+
+- 优先使用 Skill 内置文档镜像（`im/**/reference/**`）完成路由与回答
+- 仅当用户明确需要“接口签名/参数/返回值精确查询”且检测到 MCP 可用时，才下发 `nim_sdk_*` 工具链
+- 若没有 MCP，则返回能命中的 SDK Service 文档集合供模型作为依据
+
 ## 必须触发（关键词）
 
 中文：

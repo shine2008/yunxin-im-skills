@@ -2,133 +2,90 @@
 
 English | 中文
 
-🚀 An AI agent skills repo for integrating YunXin IM (including the IMUIKit UI components and the IMSDK core SDK) across Android / iOS / Web / Flutter. Describe what you want, and your AI assistant will follow a strict workflow to fetch up-to-date docs via YunXin MCP tools and verify API signatures from local datasets.
+This repository provides YunXin IM Skills (covering IMUIKit UI components and the IMSDK core SDK) for Android / iOS / Web / Flutter. Describe what you want, and your AI assistant will follow a strict workflow based on the reference docs shipped with this repo.
 
-## 🚀 Quick Start
+## Quick Start
 
-1) Configure the MCP Server (YunXin MCP)
-
-Add the following to your AI IDE / MCP client config:
-
-```json
-{
-  "mcpServers": {
-    "yunxin-sdk-mcp": {
-      "command": "npx",
-      "args": ["-y", "yunxin-sdk-mcp@latest"]
-    }
-  }
-}
-```
-
-2) Install Skills (recommended: clone repo)
+1) Install Skills (recommended: clone the repo)
 
 ```bash
 git clone <YOUR_GIT_REPO_URL> ~/.skills/yunxin-im-skills
 ```
 
-3) Configure the Skills path in your AI IDE
+2) Configure the Skills path in your AI IDE
 
 Add `~/.skills/yunxin-im-skills` as a skill source in your IDE.
 
-4) Start building
+3) Start building
 
 Ask your AI assistant, for example:
 - "How to integrate IMUIKit in Android?"
-- "Flutter: query message history"
-- "What is the Web login API?"
-- "iOS unread count APIs"
+- "Flutter: how to query history messages?"
+- "What is the Web login flow?"
+- "iOS: how to get unread counts?"
 
-## 📋 Table of Contents
+## Table of Contents
 
 - Quick Start
 - Overview
 - Coverage
-- Prerequisites
-- Installation
+- Structure
 - Examples
 - How It Works
-- Troubleshooting
+- FAQ
 
-## 🌟 Overview
+## Overview
 
 This repository helps AI assistants (Claude, Cursor, CodeBuddy, etc.) to:
 
-- 🎯 Route requests to the right layer: IMUIKit (UI) vs IMSDK (SDK)
-- 📖 Fetch documentation via MCP: `imuikit_doc` / `imsdk_doc`
-- 🔎 Verify API signatures via local datasets: `nim_sdk_search_symbols` / `nim_sdk_list_members`
-- 💻 Output minimal runnable guidance and code snippets, grounded in docs + signatures
+- Route requests to the right layer: IMUIKit (UI) vs IMSDK (SDK)
+- Prefer repo-local reference docs when generating guidance and code
+- Output minimal runnable steps first, then expand when needed
+- Apply a signature strategy: do not promise exact method signatures by default; when an API lookup capability is available in the runtime, use it to verify signatures and parameters
 
-## 🎯 Coverage
+## Coverage
 
-| Module | Description | Related MCP Tools |
-| --- | --- | --- |
-| IMUIKit (UI) | Conversation / Chat / Contact UI, initialization, integration, config, FAQ | `imuikit_doc` |
-| IMSDK (Core SDK) | Initialization, login/logout, conversation, history, send/receive, unread, friends, block list | `imsdk_doc` |
-| API Reference | Search symbols, list members, method signatures, fields | `nim_sdk_*` |
+| Module | Description |
+| --- | --- |
+| IMUIKit (UI) | Conversation / Chat / Contact UI, initialization, integration, configuration, FAQ |
+| IMSDK (Core SDK) | Initialization, login/logout, conversations, history, send/receive, unread, friends, block list, etc. |
+| Reference | Platform/topic reference docs and indexes for IMUIKit/IMSDK |
 
-## ✅ Prerequisites
+## Structure
 
-- Node.js >= 18
-- npm >= 9
-- An AI IDE/agent that supports Skills + MCP (Claude Desktop / Cursor / CodeBuddy, etc.)
-- YunXin MCP Server can be started successfully (check IDE logs)
+- Skill entry points and routing:
+  - Root entry: `SKILL.md`
+  - IM Router: `im/SKILL.md`
+  - IMUIKit: `im/uikit/SKILL.md`
+  - IMSDK: `im/sdk/SKILL.md`
+- Reference docs (offline-friendly):
+  - IMUIKit: `im/uikit/reference/<platform>/<topic>.md`
+  - IMSDK: `im/sdk/reference/<framework>/<topic>.md`
+  - Indexes:
+    - `im/uikit/reference/index.md`
+    - `im/sdk/reference/index.md`
+    - `im/reference/coverage.md`
 
-## 📦 Installation
-
-### Step 1: Install / Configure YunXin MCP Server
-
-Recommended via npx:
-
-```json
-{
-  "mcpServers": {
-    "yunxin-sdk-mcp": {
-      "command": "npx",
-      "args": ["-y", "yunxin-sdk-mcp@latest"]
-    }
-  }
-}
-```
-
-Restart your AI IDE after configuration changes.
-
-### Step 2: Install Skills
-
-Recommended:
-
-```bash
-git clone <YOUR_GIT_REPO_URL> ~/.skills/yunxin-im-skills
-```
-
-Then add the repo path as a skill source in your IDE.
-
-## 💬 Usage Examples
+## Examples
 
 - Android IMUIKit integration: "How to integrate Android IMUIKit?"
-- Web initialization + login: "What is the Web initialization API? What is the login API?"
-- Flutter history messages: "How to query history messages in Flutter? What's the signature of getMessageListEx?"
+- Web initialization and login: "What is the Web initialization flow? What is the login flow?"
+- Flutter history messages: "How to query history messages in Flutter?"
 
-## ⚙️ How It Works
+## How It Works
 
-1) Classify: UI (IMUIKit) vs SDK (IMSDK)  
-2) Select platform (Android/iOS/Web/Flutter)  
-3) Fetch official docs via MCP (`imuikit_doc` / `imsdk_doc`)  
-4) When code/signature is required, verify via local datasets (`nim_sdk_*`)  
-5) Output minimal runnable steps and code snippets with references
+When you describe a requirement, the AI assistant will:
 
-## ❓ Troubleshooting
+1) Identify whether it is UI (IMUIKit) or SDK (IMSDK)
+2) Select the target platform (Android/iOS/Web/Flutter, etc.)
+3) Prefer the repo-local reference docs (by platform/framework and topic)
+4) If the user asks for deeper API details but the runtime has no API lookup capability, return the most relevant Service docs to ground the answer and suggest verifying signatures later
+5) Output minimal runnable steps and examples, with reference doc entry points
 
-### MCP Server connection failed
-
-- Check Node version: `node --version` (>= 18 required)
-- Validate JSON syntax (no trailing commas)
-- Restart the IDE after changes
-- Check IDE logs for errors
+## FAQ
 
 ### Skills not loaded
 
-- Verify skill source path is correct and accessible
+- Verify the skill source path is correct and accessible
 - Ensure `SKILL.md` exists in the repo root
 - Restart the IDE
-

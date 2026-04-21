@@ -1,0 +1,342 @@
+网易云信 IM 支持对客户端本地和网易云信服务器存储历史消息进行查询、删除操作。
+
+本文介绍如何调用 NIM SDK 的接口实现历史消息管理。
+
+## 准备工作
+
+使用该功能前，请在 [网易云信控制台](https://app.yunxin.163.com/global/home) 开通 **历史消息** 功能，具体请参考 [配置基础功能/全局功能](https://doc.yunxin.163.com/messaging2/guide/jU0Mzg0MTU?platform=client#全局功能)。
+
+::: note note
+网易云信 IM 支持云端历史消息，历史消息的存储时长在不同的套餐包中不同，各套餐包中的限制具体请参考 [增值服务](https://yunxin.163.com/price/im)。
+:::
+
+## 监听消息相关事件
+
+在进行历史消息相关操作前，您可以提前注册监听相关事件。注册成功后，当对应事件发生时，SDK 会触发对应回调通知。
+
+- **相关回调**：
+
+    - **`onMessageDeletedNotifications`**：消息删除成功回调。当本地端或多端同步删除消息成功时会触发该回调。
+    - **`onClearHistoryNotifications`**：消息清空成功回调。当本地端或多端同步清空消息成功时会触发该回调。
+
+- **示例代码**：
+
+    :::::: div linked-codes
+    ::: code macOS/Windows
+    调用 [`addMessageListener`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#addMessageListener) 方法注册消息相关监听器，监听消息删除回调事件和消息清空回调事件。
+    ```C++
+    V2NIMMessageListener listener;
+    listener.onMessageDeletedNotifications = [](std::vector<V2NIMMessageDeletedNotification> messageDeletedNotification) {
+        // receive message deleted notifications
+    };
+    listener.onClearHistoryNotifications = [](std::vector<V2NIMClearHistoryNotification> clearHistoryNotification) {
+        // receive clear history notifications
+    };
+    messageService.addMessageListener(listener);
+    ```
+    如需移除消息相关监听器，可调用 [`removeMessageListener`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#removeMessageListener)。
+    ```C++
+    V2NIMMessageListener listener;
+    // ...
+    conversationService.addMessageListener(listener);
+    // ...
+    messageService.removeMessageListener(listener);
+    ```
+    :::
+    ::::::
+
+## 查询历史消息
+
+### 分页查询会话内所有历史消息
+
+调用 `getMessageListEx` 或 `getMessageList` 方法分页查询指定会话的所有历史消息数据。
+
+可以通过设置查询条件查询指定时间范围内具体消息类型的历史消息数据。
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMMessageListOption option;
+// ...
+messageService.getMessageListEx(
+    option,
+    [=](const V2NIMMessageListResult& result) {
+        // do something
+    },
+    [=](const V2NIMError& error) {
+       // get message list failed, handle error
+    });
+```
+:::
+::::::
+
+<!--getMessageList 示例
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMMessageListOption option;
+option.limit = 10;
+messageService.getMessageList(
+    option,
+    [](std::vector<V2NIMMessage> messages) {
+        for (auto&& message : messages) {
+            // do something
+        }
+    },
+    [](V2NIMError error) {
+        // get message list failed, handle error
+    }
+);
+```
+:::
+::::::
+-->
+
+### 分页查询会话内所有云端历史消息
+
+调用 `getCloudMessageList` 方法按条件分页获取会话内的云端历史消息数据。
+
+可以通过设置查询条件查询指定时间范围内具体消息类型的历史消息数据。
+
+**示例代码**
+
+:::::: div linked-codes
+<!--开发未提供
+-->
+::: code macOS/Windows
+```C++
+V2NIMCloudMessageListOption option;
+// ...
+messageService.getCloudMessageList(
+     option,
+     [=](const V2NIMMessageListResult& result) {
+         // do something
+     },
+     [=](const V2NIMError& error) {
+         // get message list failed, handle error
+     });
+```
+:::
+<!--暂不支持
+-->
+::::::
+
+### 批量查询指定的历史消息列表
+
+调用 `getMessageListByIds` 方法根据消息客户端 ID 查询指定的历史消息。
+
+::: note note
+- 该接口只在本地数据库中查询。
+- Web 端不支持该接口。
+:::
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+std::vector<std::string> messageClientIds;
+// ...
+messageService.getMessageListByIds(
+    messageClientIds,
+    [](std::vector<V2NIMMessage> messages) {
+        for (auto&& message : messages) {
+            // do something
+        }
+    },
+    [](V2NIMError error) {
+        // get message list by ids failed, handle error
+    });
+```
+:::
+::::::
+
+### 分页查询云端 Thread 历史消息
+
+调用 `getThreadMessageList` 方法根据 Thread 根消息分页获取所有 Thread 子消息。
+
+::: note note
+为避免触发请求频控，若云端会话数据同步已完成（收到 `onSyncFinished`），建议您改用 [`getLocalThreadMessageList`](#getLocalThreadMessageList) 方法获取本地 Thread 历史消息列表。
+:::
+
+示例代码如下：
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMTheadMessageListOption threadMessageListOption;
+// ...
+messageService.getThreadMessageList(
+    threadMessageListOption,
+    [](V2NIMThreadMessageListResult response) {
+        // do something
+    },
+    [](V2NIMError error) {
+        // get message list by refers failed, handle error
+    });
+```
+:::
+::::::
+
+### 查询本地 Thread 历史消息
+
+调用 `getLocalThreadMessageList` 方法根据 Thread 根消息获取所有本地 Thread 子消息。
+
+示例代码如下：
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMMessageRefer messageRefer;
+// ...
+messageService.getLocalThreadMessageList(
+    messageRefer,
+    [](V2NIMThreadMessageListResult response) {
+        // do something
+    },
+    [](V2NIMError error) {
+        // get message list by refers failed, handle error
+    });
+```
+:::
+::::::
+
+## 删除历史消息
+
+网易云信 IM 的删除消息接口，可通过配置 `onlyDeleteLocal` 参数选择是否只删除本地消息。
+
+- 只删除本地，本地会将该消息标记为删除，后续查询本地消息时会过滤该消息，界面不展示，卸载重装会再次显示。
+- 删除本地的同时删除云端对应的消息，删除后消息无法恢复。
+
+    :::note note
+    删除云端消息功能需要在 [网易云信控制台](https://app.yunxin.163.com/global/home) 单独开通，只有开通后，该功能才能使用。若未开通，请参考 [开启功能项](https://doc.yunxin.163.com/console/concept/TQ2NzE5MzQ?platform=console) 进行开通。
+    :::
+
+### 删除指定单条消息
+
+调用 `deleteMessage` 方法删除指定的单条消息。
+
+删除指定消息后，若消息还未读，则应用总消息未读数会减 1。
+
+若需要删除的消息处于未发送成功状态，则只删除本地消息，不涉及云端消息，因此不会触发多端同步。删除本地消息的同时删除对应的云端消息后，会多端同步该操作。
+
+本地或云端删除消息成功后，SDK 会返回删除成功回调 `onMessageDeletedNotifications`。
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMMessage message;
+// ...
+messageService.deleteMessage(
+    message,
+    "serverExtension",
+    false,
+    []() {
+        // delete message succeeded
+    },
+    [](V2NIMError error) {
+        // delete message failed, handle error
+    }
+);
+```
+:::
+::::::
+
+### 批量删除指定消息列表
+
+调用 `deleteMessages` 方法删除指定会话内的消息列表。
+
+删除指定消息列表后，若消息还未读，则应用总消息未读数会减去对应的删除的消息数量。
+
+若需要删除的消息处于未发送成功状态，则只删除本地消息，不涉及云端消息，因此不会触发多端同步。删除本地消息的同时删除对应的云端消息后，会多端同步该操作。
+
+本地或云端删除消息成功后，SDK 会返回删除成功回调 `onMessageDeletedNotifications`。
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+std::vector<V2NIMMessage> messages;
+// ...
+messageService.deleteMessages(
+    messages,
+    "serverExtension",
+    false,
+    []() {
+        // delete messages succeeded
+    },
+    [](V2NIMError error) {
+        // delete messages failed, handle error
+    });
+```
+:::
+::::::
+
+## 清空历史消息
+
+调用 `clearHistoryMessage` 方法清空指定会话内的所有消息，支持指定是否同步删除漫游消息以及是否多端同步清空操作。您也可以自由选择清空 **本地和云端** 或 **仅本地** 的历史消息。
+
+本地或云端清空消息成功后，SDK 会返回清空成功回调 `onClearHistoryNotifications`。
+
+:::::: div linked-codes
+::: code macOS/Windows
+```C++
+V2NIMClearHistoryMessageOption option;
+option.conversationId = V2NIMConversationIdUtil::p2pConversationId("target_account_id");
+messageService.clearHistoryMessage(
+    option,
+    []() {
+        // clear history message succeeded
+    },
+    [](V2NIMError error) {
+        // clear history message failed, handle error
+    });
+```
+:::
+::::::
+
+## 清空指定的漫游会话消息
+
+调用 `clearRoamingMessage` 方法清空指定的漫游会话消息，建议单次最多删除 50 个漫游会话。
+
+清空的漫游会话越多，请求耗时越长，因此若数据量打，建议分次操作。
+
+:::::: div linked-codes
+<!--暂未提供
+-->
+::: code macOS/Windows
+```C++
+nstd::vector<nstd::string> conversationIds;
+conversationIds.push_back("conversationId1");
+conversationIds.push_back("conversationId2");
+messageService.clearRoamingMessage(
+    conversationIds,
+    [](void) {
+        // clear roaming message succeeded
+    },
+    [](V2NIMError error) {
+        // clear roaming message failed, handle error
+    });
+```
+:::
+<!--暂不支持
+-->
+::::::
+
+### 相关接口
+
+:::::: div linked-codes
+::: code 安卓/iOS/macOS/Windows
+API | 说明
+--- | ---
+[`addMessageListener`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#addMessageListener) | 注册消息相关监听器
+[`removeMessageListener`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#removeMessageListener) | 取消注册消息相关监听器
+[`getMessageList`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getMessageList) | 按消息查询配置项分页获取所有历史消息
+[`getMessageListEx`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getMessageListEx) | 按消息查询配置项分页获取所有历史消息
+[`getMessageListByIds`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getMessageListByIds) | 根据消息客户端 ID 获取历史消息
+[`deleteMessage`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#deleteMessage) | 删除单条消息
+[`deleteMessages`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#deleteMessages) | 批量删除消息列表
+[`clearHistoryMessage`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#clearHistoryMessage) | 清空会话内历史消息
+[`getThreadMessageList`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getThreadMessageList) | 分页获取云端 Thread 历史消息列表
+[`getLocalThreadMessageList`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getLocalThreadMessageList) | 获取本地 Thread 历史消息列表
+[`getCloudMessageList`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#getCloudMessageList) | 按消息查询配置项分页获取云端消息
+[`clearRoamingMessage`](https://doc.yunxin.163.com/messaging2/client-apis/zIwODM2NTM?platform=client#clearRoamingMessage) | 清空指定的漫游会话消息
+:::
+::::::

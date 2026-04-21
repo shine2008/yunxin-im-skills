@@ -9,6 +9,10 @@ description: "IMUIKit (UI) skill with SDK fallback. Invoke when user asks UI pag
 
 本 Skill 以 **IMUIKit（UI 层）为主**，并在需要“接口签名/参数/返回值/具体 SDK 调用”时，自动下钻到 IMSDK 与 API Reference。
 
+默认优先使用本仓库的文档镜像（可在无 MCP 场景下工作）：
+
+- `im/uikit/reference/<platform>/<topic>.md`
+
 ## 必须触发（关键词）
 
 中文：
@@ -21,9 +25,10 @@ English:
 
 ## 主路径：UI 文档（优先）
 
-调用工具：
+执行顺序：
 
-- `imuikit_doc`
+1) 读取文档镜像：`im/uikit/reference/<platform>/<topic>.md`
+2) 若检测到 MCP 可用且需要复核，可再调用 `imuikit_doc(platform=..., topic=...)`
 
 参数名防呆：
 
@@ -40,7 +45,7 @@ English:
 - 用户说 Web/H5/Vue3：UI 用 `platform=vue` 或 `platform=h5_vue3`；SDK 用 `framework=web`
 - 用户说 uni-app：UI 用 `platform=uniapp`；SDK 用 `framework=web`
 - 用户说 小程序/微信小程序：UI 用 `platform=miniapp_wx`；SDK 用 `framework=web`
-- 用户说 Electron：UI 用 `platform=electron`；SDK 用 `framework=node`（仅当用户确实问 Node 能力/接口时）
+- 用户说 Electron：UI 用 `platform=electron`；SDK 默认 `framework=web`（除非用户明确在问 Node 端能力/接口）
 
 英文示例问句：
 
@@ -56,9 +61,10 @@ English:
 - 用户问“能力怎么做/接口怎么调用/历史消息/未读/会话/消息收发/好友/黑名单”等实现细节
 - UI 文档里出现需要进一步解释的 SDK 能力点（例如云端会话/多端已读/历史消息删除等）
 
-调用工具：
+执行顺序：
 
-- `imsdk_doc`
+1) 读取文档镜像：`im/sdk/reference/<framework>/<topic>.md`
+2) 若检测到 MCP 可用且需要复核，可再调用 `imsdk_doc(framework=..., topic=...)`
 
 参数名防呆：
 
@@ -84,7 +90,12 @@ English:
 
 歧义兜底（强制）：
 
-- 如果用户在 UI 问题中出现“接口/方法/参数/返回值/签名/错误码/代码怎么写”，必须先走 `nim_sdk_search_symbols` → `nim_sdk_list_members`，再输出代码。
+- 如果检测到 MCP 可用：用户在 UI 问题中出现“接口/方法/参数/返回值/签名/错误码/代码怎么写”，必须先走 `nim_sdk_search_symbols` → `nim_sdk_list_members`，再输出代码。
+- 如果没有 MCP：返回能命中的 IMSDK Service 相关文档集合（同 framework 优先），并明确提示“当前无法做精确签名确认”。
+
+Service 文档集合召回策略（无 MCP 时使用）：
+
+- 优先返回同 `framework` 下的：`send_receive_message`、`history_message`、`local_conversation`、`cloud_conversation`、`login_logout`、`initialization`
 
 英文示例问句：
 

@@ -7,6 +7,10 @@ description: "IMSDK (SDK + API reference) skill. Invoke when user asks capabilit
 
 适用：用户问“接口/能力如何实现/历史消息/未读/收发消息/会话管理/好友/黑名单/用户资料/在线状态”等，不涉及 UI 组件集成。
 
+默认优先使用本仓库的文档镜像（可在无 MCP 场景下工作）：
+
+- `im/sdk/reference/<framework>/<topic>.md`
+
 ## 必须触发（关键词）
 
 中文：
@@ -19,9 +23,10 @@ English:
 
 ## SDK 文档（能力实现）
 
-调用工具：
+执行顺序：
 
-- `imsdk_doc`
+1) 读取文档镜像：`im/sdk/reference/<framework>/<topic>.md`
+2) 若检测到 MCP 可用且需要复核，可再调用 `imsdk_doc(framework=..., topic=...)`
 
 参数名防呆：
 
@@ -61,6 +66,15 @@ English:
 歧义兜底（强制）：
 
 - 若用户提到“页面/组件/路由/IMUIKit”，先提示这是 UI 组件问题并引导到 IMUIKit Skill；本 Skill 仅处理底层接口与签名。
+- 若检测到 MCP 可用：签名必须走 `nim_sdk_search_symbols` → `nim_sdk_list_members`。
+- 若没有 MCP：返回“同 framework 下能命中的 Service 文档集合”（例如 `login_logout / send_receive_message / history_message / local_conversation / cloud_conversation` 等 topic 文档），并提示需接入 MCP 才能精确确认签名。
+
+Service 文档集合召回策略（无 MCP 时使用）：
+
+1) 主召回（按能力域）：`send_receive_message`、`history_message`、`local_conversation`、`cloud_conversation`
+2) 流程召回（按生命周期）：`initialization`、`login_logout`
+3) 关系类（按用户问题命中）：`friend_relationship`、`block_list`、`user_profile`、`user_status_subscription`
+4) 只在用户问“怎么查签名/接口列表”时才返回：`api_reference`
 
 英文示例问句：
 
@@ -71,4 +85,6 @@ English:
 ## 输出规范
 
 - 结论：给出应使用的 IMSDK topic 与关键接口名
-- 需要具体调用时：先查签名，再给最小可运行代码片段
+- 需要具体调用时：
+  - MCP 可用：先查签名，再给最小可运行代码片段
+  - 无 MCP：仅基于 Service 文档给出“可能的接口名/调用步骤”，并提示需要 MCP 复核签名
